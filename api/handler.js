@@ -88,13 +88,26 @@ export default async function handler(request) {
     }
 
     const authHeader = await getAuth();
+
+    // 【实验性】mytvsuper那边的经验：如果目标服务是靠读取
+    // X-Forwarded-For（客户端自己能随便编的头）来判断"你是不是本地IP"，
+    // 而不是真正校验TCP连接的来源IP，伪造这个头就能绕过地域限制。
+    // 4gtv这边未经验证，值得低成本试一次——如果没用（大概率是Cloudflare
+    // 自己的WAF在拦，那层只认真实连接IP，伪造头无效），就把这行删掉，
+    // 回到"跑在N1本地"这条路。
+    // 下面这个IP只是示例（台湾中华电信/HiNet常见IP段），建议自己多换
+    // 几个真实台湾IP段测试，不保证一定有效。
+    const FAKE_CLIENT_IP = '61.216.0.1'; // 中华电信(HiNet)常见IP段示例，可自行更换测试
+
     const headers = {
         "Host": "api2.4gtv.tv",
         "fsDEVICE": "TV",
         "fsVERSION": "1.5.4",
         "Content-Type": "application/json",
         "User-Agent": "Dalvik/2.1.0 (Linux; U; Android 13; Android TV Build/TP1A.220624.014)",
-        "4GTV_AUTH": authHeader
+        "4GTV_AUTH": authHeader,
+        "X-Forwarded-For": FAKE_CLIENT_IP,
+        "X-Real-IP": FAKE_CLIENT_IP
     };
 
     const payload = {
@@ -122,6 +135,7 @@ export default async function handler(request) {
                 `诊断信息(Vercel):\n` +
                 `上游HTTP状态码: ${resp.status} ${resp.statusText}\n` +
                 `请求URL: ${api_url}\n` +
+                `伪造的X-Forwarded-For: ${FAKE_CLIENT_IP}\n` +
                 `4GTV_AUTH: ${authHeader}\n` +
                 `上游响应内容(前1000字符):\n${bodyText.slice(0, 1000)}\n`,
                 { status: 502, headers: { "Content-Type": "text/plain; charset=utf-8" } }
