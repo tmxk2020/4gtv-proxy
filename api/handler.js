@@ -97,7 +97,7 @@ export default async function handler(request) {
     // 回到"跑在N1本地"这条路。
     // 下面这个IP只是示例（台湾中华电信/HiNet常见IP段），建议自己多换
     // 几个真实台湾IP段测试，不保证一定有效。
-    const FAKE_CLIENT_IP = '210.6.4.148'; // 中华电信(HiNet)常见IP段示例，可自行更换测试
+    const FAKE_CLIENT_IP = '151.242.189.137'; // 中华电信(HiNet)常见IP段示例，可自行更换测试
 
     const headers = {
         "Host": "api2.4gtv.tv",
